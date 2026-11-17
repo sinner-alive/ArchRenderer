@@ -4,5 +4,6 @@ const { contextBridge, ipcRenderer } = require('electron');
 contextBridge.exposeInMainWorld('archRender', {
     platform: process.platform,
 
-    importModel: () => ipcRenderer.invoke('dialog:openModel')
+    importModel: () => ipcRenderer.invoke('dialog:openModel'),
+    setViewport: (bounds) => ipcRenderer.send('viewport:set', bounds)
 });

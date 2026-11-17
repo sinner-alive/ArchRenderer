@@ -2,6 +2,8 @@
 #include<fstream>
 #include<sstream>
 #include<string>
+#include <memory>
+#include <filesystem>
 
 
 #include<glad/glad.h>
@@ -17,11 +19,18 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include<model.hpp>
 
+#ifdef ARCHRENDER_NATIVE_ADDON
+extern "C" bool attachGLFWWindowToView(GLFWwindow* window, void* parentView);
+extern "C" void resizeEmbeddedGLFWWindow(GLFWwindow* window, int x, int y, int width, int height);
+#endif
 
 
 
 const unsigned int SCR_WIDTH = 1920;
 const unsigned int SCR_HEIGHT = 1080;
+GLFWwindow* renderWindow = nullptr;
+std::unique_ptr<Shader> renderShader;
+std::unique_ptr<Model> renderModel;
 
 // camera Object
 Camera camera(glm::vec3(0.0f , 0.0f , 3.0f)) ;
@@ -103,10 +112,10 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
 }
 
 
-int main(){
+extern "C" bool initializeRenderer(void* parentView, const char* projectRoot){
     if(!glfwInit()){
         std::cout<<"glfw is failed to initialised \n";
-        return 0 ;
+        return false ;
     } ;
 
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR , 4) ;
@@ -116,27 +125,40 @@ int main(){
 #ifdef __APPLE__
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 #endif
+#ifdef ARCHRENDER_NATIVE_ADDON
+    if(parentView){
+        glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
+        glfwWindowHint(GLFW_DECORATED, GLFW_FALSE);
+        glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
+    }
+#endif
 
     // creating glfw window here
-    GLFWwindow *window = glfwCreateWindow(1920 , 1080 , "ArchRenderer" , nullptr , nullptr) ;
-    if(!window){
+    renderWindow = glfwCreateWindow(SCR_WIDTH , SCR_HEIGHT , "ArchRenderer" , nullptr , nullptr) ;
+    if(!renderWindow){
         std::cout<<"Window is failed to be created \n" ;
         glfwTerminate() ;
-        return 0 ;
+        return false ;
     }
-    glfwMakeContextCurrent(window) ;
+    glfwMakeContextCurrent(renderWindow) ;
 
     // calling fucntions 
-    glfwSetFramebufferSizeCallback(window, setWindowSize);
-    glfwSetCursorPosCallback(window, mouse_callback);
-    glfwSetScrollCallback(window, scroll_callback);
-    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+    glfwSetFramebufferSizeCallback(renderWindow, setWindowSize);
+    glfwSetCursorPosCallback(renderWindow, mouse_callback);
+    glfwSetScrollCallback(renderWindow, scroll_callback);
+#ifdef ARCHRENDER_NATIVE_ADDON
+    glfwSetInputMode(renderWindow, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+#else
+    glfwSetInputMode(renderWindow, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+#endif
 
     // initialising glad here
     if(!gladLoadGL()){
         std::cout<<"Glad is failed to be initialised\n" ;
-        glfwTerminate() ;
-        return 0 ;
+        glfwDestroyWindow(renderWindow);
+        renderWindow = nullptr;
+        glfwTerminate();
+        return false ;
     } ;
 
 
@@ -149,62 +171,125 @@ int main(){
 
     // build and compile shaders
     // -------------------------
-    Shader ourShader("engine/shaders/vertex.glsl", "engine/shaders/fragment.glsl");
+    const std::filesystem::path root = projectRoot ? projectRoot : "";
+    const std::string vertexShaderPath = projectRoot
+        ? (root / "engine/shaders/vertex.glsl").string()
+        : "engine/shaders/vertex.glsl";
+    const std::string fragmentShaderPath = projectRoot
+        ? (root / "engine/shaders/fragment.glsl").string()
+        : "engine/shaders/fragment.glsl";
+    const std::string modelPath = projectRoot
+        ? (root / "models/backpack/backpack.obj").string()
+        : "models/backpack/backpack.obj";
+    renderShader = std::make_unique<Shader>(vertexShaderPath.c_str(), fragmentShaderPath.c_str());
 
     // load models
     // -----------
-    Model ourModel("models/backpack/backpack.obj");
+    renderModel = std::make_unique<Model>(modelPath);
 
     //Model ourModel("models/houses/house 2.obj") ;
 
-    
-    // draw in wireframe
-    //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+#ifdef ARCHRENDER_NATIVE_ADDON
+    if(parentView){
+        if(!attachGLFWWindowToView(renderWindow, parentView)){
+            std::cerr<<"Failed to attach the OpenGL window to the Electron viewport.\n";
+            renderModel.reset();
+            renderShader.reset();
+            glfwDestroyWindow(renderWindow);
+            renderWindow = nullptr;
+            glfwTerminate();
+            return false;
+        }
+    }
+#endif
 
-    // render loop
-    // -----------
-    while (!glfwWindowShouldClose(window))
-    {
-        // per-frame time logic
-        // --------------------
-        float currentFrame = static_cast<float>(glfwGetTime());
-        deltaTime = currentFrame - lastFrame;
-        lastFrame = currentFrame;
+    return true;
+}
 
-        // input
-        // -----
-        getKey(window) ;
-
-        // render
-        // ------
-        glClearColor(0.05f, 0.05f, 0.05f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-        // don't forget to enable shader before setting uniforms
-        ourShader.use();
-
-        // view/projection transformations
-        glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
-        glm::mat4 view = camera.getView();
-        ourShader.setMat4("projection", projection);
-        ourShader.setMat4("view", view);
-
-        // render the loaded model
-        glm::mat4 model = glm::mat4(1.0f);
-        model = glm::scale(model, glm::vec3(0.06f));
-        model = glm::translate(model, glm::vec3(-2.0171f, -13.215f, -0.7135f));
-        ourShader.setMat4("model", model);
-        ourModel.Draw(ourShader);
-
-
-        // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
-        // -------------------------------------------------------------------------------
-        glfwSwapBuffers(window);
-        glfwPollEvents();
+extern "C" void setRendererViewport(int x, int y, int width, int height){
+    if(!renderWindow || width <= 0 || height <= 0){
+        return;
     }
 
-    // glfw: terminate, clearing all previously allocated GLFW resources.
-    // ------------------------------------------------------------------
+#ifdef ARCHRENDER_NATIVE_ADDON
+    resizeEmbeddedGLFWWindow(renderWindow, x, y, width, height);
+#endif
+}
+
+extern "C" bool rendererShouldClose(){
+    return !renderWindow || glfwWindowShouldClose(renderWindow);
+}
+
+extern "C" void renderFrame(){
+    if(!renderWindow || !renderShader || !renderModel){
+        return;
+    }
+
+    glfwMakeContextCurrent(renderWindow);
+    glfwPollEvents();
+    if(glfwWindowShouldClose(renderWindow)){
+        return;
+    }
+
+    float currentFrame = static_cast<float>(glfwGetTime());
+    deltaTime = currentFrame - lastFrame;
+    lastFrame = currentFrame;
+    getKey(renderWindow);
+
+    int framebufferWidth;
+    int framebufferHeight;
+    glfwGetFramebufferSize(renderWindow, &framebufferWidth, &framebufferHeight);
+    if(framebufferWidth <= 0 || framebufferHeight <= 0){
+        return;
+    }
+
+    glClearColor(0.05f, 0.05f, 0.05f, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    renderShader->use();
+    glm::mat4 projection = glm::perspective(
+        glm::radians(camera.Zoom),
+        static_cast<float>(framebufferWidth) / static_cast<float>(framebufferHeight),
+        0.1f,
+        100.0f
+    );
+    glm::mat4 view = camera.getView();
+    renderShader->setMat4("projection", projection);
+    renderShader->setMat4("view", view);
+
+    glm::mat4 model = glm::mat4(1.0f);
+    model = glm::scale(model, glm::vec3(0.06f));
+    model = glm::translate(model, glm::vec3(-2.0171f, -13.215f, -0.7135f));
+    renderShader->setMat4("model", model);
+    renderModel->Draw(*renderShader);
+
+    glfwSwapBuffers(renderWindow);
+}
+
+extern "C" void shutdownRenderer(){
+    if(!renderWindow){
+        return;
+    }
+
+    glfwMakeContextCurrent(renderWindow);
+    renderModel.reset();
+    renderShader.reset();
+    glfwDestroyWindow(renderWindow);
+    renderWindow = nullptr;
     glfwTerminate();
+}
+
+#ifndef ARCHRENDER_NATIVE_ADDON
+int main(){
+    if(!initializeRenderer(nullptr, nullptr)){
+        return 1;
+    }
+
+    while(!rendererShouldClose()){
+        renderFrame();
+    }
+
+    shutdownRenderer();
     return 0;
 }
+#endif

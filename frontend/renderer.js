@@ -2,8 +2,22 @@
 const importButton = document.getElementById('importModel');
 const sceneObjects = document.getElementById('sceneObjects');
 const consoleOutput = document.getElementById('consoleOutput');
+const viewport = document.getElementById('viewport');
 
 let importedModels = [];
+
+function updateViewport() {
+    const bounds = viewport.getBoundingClientRect();
+    window.archRender.setViewport({
+        x: bounds.left,
+        y: bounds.top,
+        width: bounds.width,
+        height: bounds.height
+    });
+}
+
+new ResizeObserver(updateViewport).observe(viewport);
+window.addEventListener('resize', updateViewport);
 
 function logMessage(message) {
     const log = document.createElement('p');
