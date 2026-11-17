@@ -1,0 +1,187 @@
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    height: 100vh;
+    overflow: hidden;
+    background: #000000;
+    color: #e5e7eb;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+/* Header */
+.app-header {
+    height: 55px;
+    display: flex;
+    align-items: center;
+    padding: 0 20px;
+    background: #20232b;
+    border-bottom: 1px solid #343843;
+    gap: 35px;
+}
+
+.brand {
+    font-size: 20px;
+    font-weight: 700;
+    color: #60a5fa;
+}
+
+.menu {
+    display: flex;
+    gap: 8px;
+}
+
+button {
+    border: none;
+    background: transparent;
+    color: #cbd5e1;
+    padding: 9px 13px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 13px;
+}
+
+button:hover {
+    background: #353b48;
+    color: white;
+}
+
+.window-actions {
+    margin-left: auto;
+    color: #94a3b8;
+    font-size: 12px;
+}
+
+/* Toolbar */
+.toolbar {
+    height: 48px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0 15px;
+    background: #252932;
+    border-bottom: 1px solid #343843;
+}
+
+.toolbar button {
+    background: #343a46;
+}
+
+/* Main Editor */
+.editor {
+    display: flex;
+    height: calc(100vh - 55px - 48px - 130px);
+    min-height: 200px;
+}
+
+/* Side Panels */
+.scene-panel,
+.properties-panel {
+    width: 240px;
+    min-width: 190px;
+    background: #222630;
+    padding: 15px;
+    overflow-y: auto;
+}
+
+.scene-panel {
+    border-right: 1px solid #343843;
+}
+
+.properties-panel {
+    border-left: 1px solid #343843;
+}
+
+h3 {
+    font-size: 14px;
+    margin-bottom: 20px;
+    font-weight: 600;
+}
+
+h4 {
+    font-size: 13px;
+    margin-bottom: 15px;
+    color: #93c5fd;
+}
+
+/* Viewport */
+.viewport {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    background: #A8D5E2;
+}
+
+.viewport-header {
+    height: 35px;
+    padding: 10px 15px;
+    background: #252932;
+    font-size: 12px;
+    border-bottom: 1px solid #343843;
+}
+
+.viewport-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    background: #181c25;
+}
+
+.viewport-content h2 {
+    color: #60a5fa;
+    font-size: 28px;
+}
+
+.viewport-content p,
+.empty-message {
+    color: #64748b;
+    font-size: 13px;
+}
+
+/* Properties */
+.property-section {
+    margin-top: 20px;
+}
+
+.property-section label {
+    display: block;
+    font-size: 12px;
+    margin: 15px 0 7px;
+    color: #94a3b8;
+}
+
+.property-section input {
+    width: 100%;
+    padding: 9px;
+    background: #171b24;
+    border: 1px solid #3a4150;
+    border-radius: 4px;
+    color: white;
+    outline: none;
+}
+
+/* Console */
+.console {
+    height: 130px;
+    padding: 12px 18px;
+    background: #20232b;
+    border-top: 1px solid #343843;
+}
+
+.console h4 {
+    margin-bottom: 12px;
+}
+
+#consoleOutput {
+    font-family: monospace;
+    font-size: 12px;
+    color: #86efac;
+}

@@ -1,0 +1,11 @@
+{
+    "cmake.sourceDirectory": "/Users/vinay/Desktop/New Folder/archrenderer/engine",
+    "C_Cpp.default.includePath": [
+        "${workspaceFolder}/engine/include",
+        "${workspaceFolder}/engine/glad/include",
+        "/opt/homebrew/opt/glfw/include",
+        "/opt/homebrew/include"
+    ],
+    "C_Cpp.default.cppStandard": "c++17",
+    "C_Cpp.default.intelliSenseMode": "macos-clang-arm64"
+}

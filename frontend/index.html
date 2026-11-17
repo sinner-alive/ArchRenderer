@@ -1,0 +1,87 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ArchRender</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="renderer.js" defer></script>
+</head>
+<body>
+
+    <!-- Application Header -->
+    <header class="app-header">
+        <div class="brand">ArchRender</div>
+
+        <!-- <nav class="menu">
+            <button>File</button>
+            <button>Edit</button>
+            <button>View</button>
+            <button>Import</button>
+            <button>Help</button>
+        </nav> -->
+
+        <div class="window-actions">
+            <span>3D Architecture Renderer</span>
+        </div>
+    </header>
+
+    <!-- Main Toolbar -->
+    <div class="toolbar">
+        <button id="importModel">Import Model</button>
+        <button id="selectTool">Select</button>
+        <button id="moveTool">Move</button>
+        <button id="rotateTool">Rotate</button>
+        <button id="scaleTool">Scale</button>
+    </div>
+
+    <!-- Main Editor Layout -->
+    <main class="editor">
+
+        <!-- Scene Hierarchy -->
+        <aside class="scene-panel">
+            <h3>Scene Hierarchy</h3>
+            <div id="sceneObjects">
+                <p class="empty-message">No objects imported</p>
+            </div>
+        </aside>
+
+        <!-- Rendering Viewport -->
+        <section class="viewport">
+            <div class="viewport-header">3D Viewport</div>
+
+            <div class="viewport-content" id="viewport">
+                <h2>ArchRender</h2>
+                <p>Import a 3D model to get started</p>
+            </div>
+        </section>
+
+        <!-- Properties Panel -->
+        <aside class="properties-panel">
+            <h3>Properties</h3>
+
+            <div class="property-section">
+                <h4>Transform</h4>
+
+                <label>Position</label>
+                <input type="text" placeholder="X, Y, Z">
+
+                <label>Rotation</label>
+                <input type="text" placeholder="X, Y, Z">
+
+                <label>Scale</label>
+                <input type="text" placeholder="X, Y, Z">
+            </div>
+        </aside>
+
+    </main>
+
+    <!-- Bottom Console -->
+    <footer class="console">
+        <h4>Console</h4>
+        <div id="consoleOutput">ArchRender engine ready.</div>
+    </footer>
+
+</body>
+</html>
