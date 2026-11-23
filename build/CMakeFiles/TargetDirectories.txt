@@ -1,0 +1,3 @@
+/Users/vinay/Desktop/Archrenderer/build/CMakeFiles/ArchRender.dir
+/Users/vinay/Desktop/Archrenderer/build/CMakeFiles/edit_cache.dir
+/Users/vinay/Desktop/Archrenderer/build/CMakeFiles/rebuild_cache.dir
