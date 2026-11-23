@@ -23,7 +23,7 @@ const unsigned int SCR_WIDTH = 1920;
 const unsigned int SCR_HEIGHT = 1080;
 
 // camera Object
-Camera camera(glm::vec3(0.0f , 0.0f , 5.0f)) ;
+Camera camera(glm::vec3(0.0f , 0.0f , 15.0f)) ;
 float lastX = SCR_WIDTH / 2.0f ;
 float lastY = SCR_HEIGHT / 2.0f ;
 bool firstMouse = true ;
@@ -43,7 +43,10 @@ void setWindowSize(GLFWwindow* window , int width , int height){
 
 
 // model matrix 
-glm::mat4 model = glm::mat4(1.0f);
+const glm::mat4 vampireModelTransform =
+    glm::translate(glm::mat4(1.0f), glm::vec3(0.00003f, -1.04077f, -0.02645f)) *
+    glm::scale(glm::mat4(1.0f), glm::vec3(0.01f));
+glm::mat4 model = vampireModelTransform;
 
 
 static bool shouldRotate = false;
@@ -84,19 +87,19 @@ void getKey(GLFWwindow *window){
         camera.ProcessKeyboard(DOWN , deltaTime) ;
     }
     if(glfwGetKey(window , GLFW_KEY_I) == GLFW_PRESS){
-        model = glm::translate(model , glm::vec3(0.0f , 0.0f , -deltaTime*3)) ;
+        model = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, -deltaTime * 3.0f)) * model;
     }
     if(glfwGetKey(window , GLFW_KEY_K) == GLFW_PRESS){
-        model = glm::translate(model , glm::vec3(0.0f , 0.0f , deltaTime*3)) ;
+        model = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, deltaTime * 3.0f)) * model;
     }
     if(glfwGetKey(window , GLFW_KEY_L) == GLFW_PRESS){
-        model = glm::translate(model , glm::vec3(deltaTime*3 , 0.0f , 0.0f)) ;
+        model = glm::translate(glm::mat4(1.0f), glm::vec3(deltaTime * 3.0f, 0.0f, 0.0f)) * model;
     }
     if(glfwGetKey(window , GLFW_KEY_J) == GLFW_PRESS){
-        model = glm::translate(model , glm::vec3(-deltaTime*3 , 0.0f , 0.0f)) ;
+        model = glm::translate(glm::mat4(1.0f), glm::vec3(-deltaTime * 3.0f, 0.0f, 0.0f)) * model;
     }
     if(glfwGetKey(window , GLFW_KEY_SPACE) == GLFW_PRESS){
-        model = glm::mat4(1.0f);
+        model = vampireModelTransform;
     }
 
     const bool rotateKeyIsPressed = glfwGetKey(window, GLFW_KEY_F) == GLFW_PRESS;
@@ -186,12 +189,12 @@ int main(){
     const std::string fragmentPath = "engine/shaders/fragment.glsl";
 
     
-    Model *ourmodel = new Model("models/backpack/backpack.obj") ;
+    Model *ourmodel = new Model("models/vampire/dancing_vampire.dae") ;
 
     Model *sunmodel = new Model("models/sun/model.glb") ;
 
     if(ourmodel->isEmpty()){
-        std::cerr << "Failed to load model: models/backpack/backpack.obj\n";
+        std::cerr << "Failed to load model ourmodel\n";
         delete ourmodel;
         glfwDestroyWindow(window);
         glfwTerminate();
