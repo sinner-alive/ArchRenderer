@@ -1,7 +1,8 @@
 node_modules/
-engine/build/
+build/
+
 .DS_Store
 *.o
 *.d
 models/houses/
-.vscode
+.vscode/
