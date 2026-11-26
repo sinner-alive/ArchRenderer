@@ -43,10 +43,8 @@ void setWindowSize(GLFWwindow* window , int width , int height){
 
 
 // model matrix 
-const glm::mat4 vampireModelTransform =
-    glm::translate(glm::mat4(1.0f), glm::vec3(0.00003f, -1.04077f, -0.02645f)) *
-    glm::scale(glm::mat4(1.0f), glm::vec3(0.01f));
-glm::mat4 model = vampireModelTransform;
+glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(0.00003f, -1.04077f, -0.02645f)) * glm::scale(glm::mat4(1.0f), glm::vec3(1.0f));
+
 
 
 static bool shouldRotate = false;
@@ -99,7 +97,7 @@ void getKey(GLFWwindow *window){
         model = glm::translate(glm::mat4(1.0f), glm::vec3(-deltaTime * 3.0f, 0.0f, 0.0f)) * model;
     }
     if(glfwGetKey(window , GLFW_KEY_SPACE) == GLFW_PRESS){
-        model = vampireModelTransform;
+        model = glm::translate(glm::mat4(1.0f), glm::vec3(0.00003f, -1.04077f, -0.02645f)) * glm::scale(glm::mat4(1.0f), glm::vec3(1.0f));
     }
 
     const bool rotateKeyIsPressed = glfwGetKey(window, GLFW_KEY_F) == GLFW_PRESS;
@@ -217,15 +215,12 @@ int main(){
     glEnable(GL_DEPTH_TEST) ;
 
 
-    // loading shder files
-    const std::string vertexPath = "engine/shaders/vertex.glsl";
-    const std::string fragmentPath = "engine/shaders/fragment.glsl";
-
     
-    Model *ourmodel = new Model("models/vampire/dancing_vampire.dae") ;
-
+    
+    Model *ourmodel = new Model("models/backpack/backpack.obj") ;
+    
     Model *sunmodel = new Model("models/sun/model.glb") ;
-
+    
     if(ourmodel->isEmpty()){
         std::cerr << "Failed to load model ourmodel\n";
         delete ourmodel;
@@ -233,7 +228,7 @@ int main(){
         glfwTerminate();
         return -1;
     }
-
+    
     if(sunmodel->isEmpty()){
         std::cerr<<"Failed to load model : sun model\n" ;
         delete sunmodel ;
@@ -241,8 +236,12 @@ int main(){
         glfwTerminate() ;
         return -1 ;
     }
-
-
+    
+    
+    // loading shder files
+    const std::string vertexPath = "engine/shaders/vertex.glsl";
+    const std::string fragmentPath = "engine/shaders/fragment.glsl";
+    
     // class shder class 
     Shader *shaderProgram  ;
     
@@ -263,8 +262,8 @@ int main(){
 
     // skybox shader 
     Shader *skyshader = new Shader (
-        "engine/shaders/cubemapvert.glsl" ,
-        "engine/shaders/cubemapfrag.glsl"
+        "engine/shaders/skyvert.glsl" ,
+        "engine/shaders/skyfrag.glsl" 
     );
 
     glm::mat4 view = glm::mat4(1.0f);
@@ -289,12 +288,12 @@ int main(){
 
     //load texture images path 
     // std::vector<std::string> path = {
-    //     "textures/right.jpg",
-    //     "textures/left.jpg",
-    //     "textures/top.jpg",
-    //     "textures/bottom.jpg",
-    //     "textures/front.jpg",
-    //     "textures/back.jpg"
+    //     "textures/diffrent_face/right.jpg",
+    //     "textures/diffrent_face/left.jpg",
+    //     "textures/diffrent_face/top.jpg",
+    //     "textures/diffrent_face/bottom.jpg",
+    //     "textures/diffrent_face/front.jpg",
+    //     "textures/diffrent_face/back.jpg"
     // };
 
         std::vector<std::string> path = {
@@ -443,7 +442,6 @@ int main(){
         glDepthMask(GL_FALSE);
         glBindVertexArray(skyVAO);
         glDrawArrays(GL_TRIANGLES, 0, 36);
-        glBindVertexArray(0);
         glDepthMask(GL_TRUE);
         glDepthFunc(GL_LESS);
 
