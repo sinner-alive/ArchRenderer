@@ -23,7 +23,7 @@ const unsigned int SCR_WIDTH = 1920;
 const unsigned int SCR_HEIGHT = 1080;
 
 // camera Object
-Camera camera(glm::vec3(0.0f , 0.0f , 15.0f)) ;
+Camera camera(glm::vec3(0.0f , 3.0f , 15.0f)) ;
 float lastX = SCR_WIDTH / 2.0f ;
 float lastY = SCR_HEIGHT / 2.0f ;
 bool firstMouse = true ;
@@ -143,6 +143,39 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
 }
 
 
+
+// load skybox texture
+
+unsigned int loadCubemap(std::vector<std::string> &faces){
+    unsigned int textureId ;
+    glGenTextures(1 , &textureId) ;
+    glBindTexture(GL_TEXTURE_CUBE_MAP , textureId) ;
+    int width , height , nrChannels ;
+    for(int i = 0 ; i < faces.size() ; i++){
+        unsigned char *data = stbi_load(faces[i].c_str() , &width , &height , &nrChannels , 0) ;
+        if (data)
+            {
+                glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 
+                            0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data
+                );
+                stbi_image_free(data);
+            }
+            else
+            {
+                std::cout << "Cubemap tex failed to load at path: " << faces[i] << std::endl;
+                stbi_image_free(data);
+            }
+        }
+        glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+
+        return textureId ;
+}
+
+
 int main(){
     if(!glfwInit()){
         std::cout<<"glfw is failed to initialised \n";
@@ -227,16 +260,18 @@ int main(){
         "engine/shaders/sunfragment.glsl"
     );
 
+
+    // skybox shader 
+    Shader *skyshader = new Shader (
+        "engine/shaders/cubemapvert.glsl" ,
+        "engine/shaders/cubemapfrag.glsl"
+    );
+
     glm::mat4 view = glm::mat4(1.0f);
     glm::mat4 projection = glm::mat4(1.0f);
 
 
-    projection = glm::perspective(
-        glm::radians(camera.Zoom),
-        (float) SCR_WIDTH / (float) SCR_HEIGHT,
-        0.1f,
-        100.0f
-    );
+    projection = glm::perspective(glm::radians(camera.Zoom),(float) SCR_WIDTH / (float) SCR_HEIGHT,0.1f,400.0f);
 
 
     int frameBufferWidth, frameBufferHeight;
@@ -247,9 +282,94 @@ int main(){
 
     // get loaction for the model 
     const GLint modelLoc = glGetUniformLocation(shaderProgram->ID, "model");
-    const glm::vec3 sunPosition = glm::vec3(0.0f , 30.0f , -50.0f) ;
+    const glm::vec3 sunPosition = glm::vec3(0.0f , 30.0f , -320.0f) ;
     glm::mat4 sunPos = glm::translate(glm::mat4(1.0f), sunPosition);
-    sunPos = glm::scale(sunPos, glm::vec3(0.002f));
+    sunPos = glm::scale(sunPos, glm::vec3(0.015f));
+
+
+    //load texture images path 
+    // std::vector<std::string> path = {
+    //     "textures/right.jpg",
+    //     "textures/left.jpg",
+    //     "textures/top.jpg",
+    //     "textures/bottom.jpg",
+    //     "textures/front.jpg",
+    //     "textures/back.jpg"
+    // };
+
+        std::vector<std::string> path = {
+        "textures/black_space/top.jpg",
+        "textures/black_space/top.jpg",
+        "textures/black_space/top.jpg",
+        "textures/black_space/top.jpg",
+        "textures/black_space/top.jpg",
+        "textures/black_space/top.jpg"
+    };
+
+    float skyboxVertices[] = {
+        // positions          
+        -1.0f,  1.0f, -1.0f,
+        -1.0f, -1.0f, -1.0f,
+         1.0f, -1.0f, -1.0f,
+         1.0f, -1.0f, -1.0f,
+         1.0f,  1.0f, -1.0f,
+        -1.0f,  1.0f, -1.0f,
+
+        -1.0f, -1.0f,  1.0f,
+        -1.0f, -1.0f, -1.0f,
+        -1.0f,  1.0f, -1.0f,
+        -1.0f,  1.0f, -1.0f,
+        -1.0f,  1.0f,  1.0f,
+        -1.0f, -1.0f,  1.0f,
+
+         1.0f, -1.0f, -1.0f,
+         1.0f, -1.0f,  1.0f,
+         1.0f,  1.0f,  1.0f,
+         1.0f,  1.0f,  1.0f,
+         1.0f,  1.0f, -1.0f,
+         1.0f, -1.0f, -1.0f,
+
+        -1.0f, -1.0f,  1.0f,
+        -1.0f,  1.0f,  1.0f,
+         1.0f,  1.0f,  1.0f,
+         1.0f,  1.0f,  1.0f,
+         1.0f, -1.0f,  1.0f,
+        -1.0f, -1.0f,  1.0f,
+
+        -1.0f,  1.0f, -1.0f,
+         1.0f,  1.0f, -1.0f,
+         1.0f,  1.0f,  1.0f,
+         1.0f,  1.0f,  1.0f,
+        -1.0f,  1.0f,  1.0f,
+        -1.0f,  1.0f, -1.0f,
+
+        -1.0f, -1.0f, -1.0f,
+        -1.0f, -1.0f,  1.0f,
+         1.0f, -1.0f, -1.0f,
+         1.0f, -1.0f, -1.0f,
+        -1.0f, -1.0f,  1.0f,
+         1.0f, -1.0f,  1.0f
+    };
+
+    unsigned int skyVAO , skyVBO ;
+
+    glGenVertexArrays(1 , &skyVAO) ;
+    glGenBuffers(1 , &skyVBO) ;
+    glBindVertexArray(skyVAO) ;
+    glBindBuffer(GL_ARRAY_BUFFER , skyVBO) ;
+    glBufferData(GL_ARRAY_BUFFER, sizeof(skyboxVertices), &skyboxVertices, GL_STATIC_DRAW);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+
+
+    // fix te inverted image error fir turn off the invertion 
+    stbi_set_flip_vertically_on_load(0) ;
+    unsigned int cubeMap = loadCubemap(path) ;
+    // again turn on the invertion 
+    stbi_set_flip_vertically_on_load(1) ;
+
+
+
 
     while(!glfwWindowShouldClose(window)){
         float currentFrame = static_cast<float>(glfwGetTime()) ;
@@ -306,10 +426,34 @@ int main(){
         );
         sunmodel->Draw(*sunshader);
 
+        skyshader->use();
+        const glm::mat4 skyView = glm::mat4(glm::mat3(view));
+        glUniformMatrix4fv(
+            glGetUniformLocation(skyshader->ID, "view"),
+            1, GL_FALSE, glm::value_ptr(skyView)
+        );
+        glUniformMatrix4fv(
+            glGetUniformLocation(skyshader->ID, "projection"),
+            1, GL_FALSE, glm::value_ptr(projection)
+        );
+        glUniform1i(glGetUniformLocation(skyshader->ID, "skybox"), 0);
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_CUBE_MAP, cubeMap);
+        glDepthFunc(GL_LEQUAL);
+        glDepthMask(GL_FALSE);
+        glBindVertexArray(skyVAO);
+        glDrawArrays(GL_TRIANGLES, 0, 36);
+        glBindVertexArray(0);
+        glDepthMask(GL_TRUE);
+        glDepthFunc(GL_LESS);
+
         glfwSwapBuffers(window) ;
         glfwPollEvents() ;
     }
 
+    glDeleteBuffers(1 , &skyVBO) ;
+    glDeleteVertexArrays(1 , &skyVAO) ;
+    delete skyshader ;
     delete shaderProgram ;
     delete sunshader;
     delete ourmodel;
