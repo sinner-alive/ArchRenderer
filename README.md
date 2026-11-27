@@ -1,28 +1,33 @@
 # ArchRenderer
 
-ArchRenderer is a real-time 3D rendering project built with C++, OpenGL, GLFW, GLM, and Assimp. It loads and renders 3D models with lighting, camera controls, and a cubemap skybox. An Electron-based desktop interface is also included.
+ArchRenderer is a real-time 3D rendering application built with C++, OpenGL 4.1, GLFW, GLM, Assimp, and Dear ImGui. It loads and renders 3D models with directional lighting, free-fly camera controls, a cubemap skybox, and an integrated native UI inspector.
 
 ## Features
 
-- Load and render 3D model formats supported by Assimp.
-- Orbit the view with mouse look and move the camera with the keyboard.
-- Apply diffuse and specular lighting.
-- Render a cubemap skybox.
-- Display a sun model in the scene.
+- Load and switch between 3D model formats supported by Assimp (`.obj`, `.glb`, `.gltf`, `.fbx`, `.dae`) directly from the UI.
+- Real-time native Dear ImGui inspector for model transforms, lighting color/intensity, sun position, camera FOV, and wireframe/skybox toggles.
+- Free-fly camera navigation with mouse look and keyboard movement, plus `Tab` cursor toggling for seamless UI interaction.
+- Diffuse and specular lighting driven by a dynamic sun light source.
+- Cubemap skybox rendering.
 
 ## Requirements
 
 - CMake 3.20 or newer
 - A C++17 compiler
-- OpenGL
+- OpenGL 4.1+
 - GLFW 3
 - GLM
 - Assimp
-- Node.js and npm (only needed for the Electron interface)
 
-The native engine's CMake configuration finds GLFW, GLM, and Assimp on your system. Install their development packages using the package manager for your operating system before building.
+*(Dear ImGui and GLAD are vendored directly inside `engine/` and compiled automatically with the project—no external UI or Node.js dependencies are required.)*
 
-## Build the native renderer
+The CMake configuration finds GLFW, GLM, and Assimp on your system. Install their development packages using the package manager for your operating system before building:
+
+```sh
+brew install cmake glfw glm assimp
+```
+
+## Build and Run
 
 Run these commands from the repository root:
 
@@ -37,22 +42,12 @@ Run the renderer from the repository root so its relative model, shader, and tex
 ./build/ArchRender
 ```
 
-## Run the Electron interface
-
-Build the native renderer first, then install the JavaScript dependencies and start Electron:
-
-```sh
-npm install
-npm start
-```
-
-The Electron application launches `build/ArchRender` from the repository root.
-
 ## Controls
 
 | Input | Action |
 | --- | --- |
-| Mouse | Look around |
+| Tab | Toggle between Fly Camera mode (cursor locked) and UI Inspector mode (cursor visible) |
+| Mouse | Look around (in Fly Camera mode) |
 | Scroll wheel | Change camera field of view |
 | W / S | Move forward / backward |
 | A / D | Move left / right |
@@ -63,14 +58,18 @@ The Electron application launches `build/ArchRender` from the repository root.
 | Space | Reset the model transform |
 | Escape | Close the renderer |
 
-## Project layout
+## Project Layout
 
 ```text
-engine/       C++ renderer, headers, and GLSL shaders
-frontend/     Electron application's HTML, CSS, and JavaScript
-electron/     Electron main process and preload script
-models/       Sample 3D models
-textures/     Cubemap and model textures
+engine/
+├── CMakeLists.txt    # Build configuration for ArchRender and vendored ImGui
+├── imgui/            # Dear ImGui core and GLFW/OpenGL3 backends
+├── include/          # Camera, Shader, Model, Mesh, and UIManager headers
+├── src/              # Main render loop and ImGui frontend implementation
+├── shaders/          # GLSL vertex and fragment shaders
+└── glad/             # OpenGL 4.1 Core function loader
+models/               # Sample 3D models
+textures/             # Cubemap and model textures
 ```
 
 The cubemap face paths are configured in `engine/src/main.cpp`. Cubemaps require six square images with matching dimensions, in the order expected by the renderer: right, left, top, bottom, front, and back.
