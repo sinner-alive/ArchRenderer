@@ -407,8 +407,8 @@ int main(){
 
 
 
-    //  temp color to test if the ui is working 
-    glm::vec3 lightColor(0.2f, 0.1f, 0.4f);
+    // warm white light so the model is readable 
+    glm::vec3 lightColor(1.0f, 0.96f, 0.88f);
 
     while(!glfwWindowShouldClose(window)){
         float currentFrame = static_cast<float>(glfwGetTime()) ;
@@ -488,7 +488,7 @@ int main(){
 
 
 
-        ui.render(camera , model , shouldRotate , sunPosition , lightColor) ;
+        ui.render(camera , model , shouldRotate , sunPosition , lightColor , ourmodel) ;
 
 
         //^^^^^^^^^^^^^^^^^^^ sample imgui code ^^^^^^^^^^^^^^^^^^^^^
