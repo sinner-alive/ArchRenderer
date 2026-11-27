@@ -9,7 +9,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
-// include made by myself present in the includes 
+
 #include <camera.hpp>
 #include <shaders.hpp>
 #include<model.hpp>
@@ -17,6 +17,11 @@
 //image tool 
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
+
+
+#include <uimanager.hpp>
+#include "imgui.h"
+
 
 
 const unsigned int SCR_WIDTH = 1920;
@@ -31,6 +36,12 @@ bool firstMouse = true ;
 //timings 
 static float deltaTime = 0.0f ;
 float lastFrame = 0.0f ;
+
+
+
+// mouse cursor toggle
+bool uiMode = false ;
+static bool tabKeyWasPressed = false ;
 
 
 
@@ -106,6 +117,14 @@ void getKey(GLFWwindow *window){
     }
     rotateKeyWasPressed = rotateKeyIsPressed;
     rotating();
+    const bool tabKeyIsPressed = glfwGetKey(window , GLFW_KEY_TAB) == GLFW_PRESS ;
+    if(!tabKeyWasPressed && tabKeyIsPressed){
+        uiMode = !uiMode ;
+        glfwSetInputMode(window, GLFW_CURSOR, uiMode ? GLFW_CURSOR_NORMAL : GLFW_CURSOR_DISABLED);
+        firstMouse = true;
+    }
+    tabKeyWasPressed = tabKeyIsPressed ;
+    if (ImGui::GetIO().WantCaptureKeyboard) return;
 
 }
 
@@ -114,6 +133,7 @@ void getKey(GLFWwindow *window){
 // -------------------------------------------------------
 void mouse_callback(GLFWwindow* window, double xposIn, double yposIn)
 {
+    if (uiMode || ImGui::GetIO().WantCaptureMouse) return;
     float xpos = static_cast<float>(xposIn);
     float ypos = static_cast<float>(yposIn);
 
@@ -137,6 +157,7 @@ void mouse_callback(GLFWwindow* window, double xposIn, double yposIn)
 // ----------------------------------------------------------------------
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
 {   
+    if (ImGui::GetIO().WantCaptureMouse) return;
     camera.ProcessMouseScroll(static_cast<float>(yoffset));
 }
 
@@ -210,6 +231,21 @@ int main(){
         return 0 ;
     } ;
 
+    UIMANAGER ui ;
+    ui.uiInit(window) ;
+
+
+    // ^^^^^^^^^^^^^^^^^^^initialize gui here^^^^^^^^^^^^^^^^^^^^^^^^^
+    // IMGUI_CHECKVERSION();
+    // ImGui::CreateContext();
+    // ImGuiIO& io = ImGui::GetIO();
+    // io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
+    // ImGui::StyleColorsDark();
+    // ImGui_ImplGlfw_InitForOpenGL(window, true);
+    // ImGui_ImplOpenGL3_Init("#version 410");
+    //^^^^^^^^^^^^^^^^^^^^^^END^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
 
     stbi_set_flip_vertically_on_load(true);
     glEnable(GL_DEPTH_TEST) ;
@@ -217,7 +253,9 @@ int main(){
 
     
     
-    Model *ourmodel = new Model("models/backpack/backpack.obj") ;
+    // Model *ourmodel = new Model("models/backpack/backpack.obj") ;
+    
+    Model *ourmodel = new Model("models/cyborg/cyborg.obj") ;
     
     Model *sunmodel = new Model("models/sun/model.glb") ;
     
@@ -281,29 +319,29 @@ int main(){
 
     // get loaction for the model 
     const GLint modelLoc = glGetUniformLocation(shaderProgram->ID, "model");
-    const glm::vec3 sunPosition = glm::vec3(0.0f , 30.0f , -320.0f) ;
+    glm::vec3 sunPosition = glm::vec3(0.0f , 30.0f , -320.0f) ;
     glm::mat4 sunPos = glm::translate(glm::mat4(1.0f), sunPosition);
     sunPos = glm::scale(sunPos, glm::vec3(0.015f));
 
 
-    //load texture images path 
-    // std::vector<std::string> path = {
-    //     "textures/diffrent_face/right.jpg",
-    //     "textures/diffrent_face/left.jpg",
-    //     "textures/diffrent_face/top.jpg",
-    //     "textures/diffrent_face/bottom.jpg",
-    //     "textures/diffrent_face/front.jpg",
-    //     "textures/diffrent_face/back.jpg"
-    // };
-
-        std::vector<std::string> path = {
-        "textures/black_space/top.jpg",
-        "textures/black_space/top.jpg",
-        "textures/black_space/top.jpg",
-        "textures/black_space/top.jpg",
-        "textures/black_space/top.jpg",
-        "textures/black_space/top.jpg"
+    // load texture images path 
+    std::vector<std::string> path = {
+        "textures/diffrent_face/right.jpg",
+        "textures/diffrent_face/left.jpg",
+        "textures/diffrent_face/top.jpg",
+        "textures/diffrent_face/bottom.jpg",
+        "textures/diffrent_face/front.jpg",
+        "textures/diffrent_face/back.jpg"
     };
+
+    //     std::vector<std::string> path = {
+    //     "textures/black_space/top.jpg",
+    //     "textures/black_space/top.jpg",
+    //     "textures/black_space/top.jpg",
+    //     "textures/black_space/top.jpg",
+    //     "textures/black_space/top.jpg",
+    //     "textures/black_space/top.jpg"
+    // };
 
     float skyboxVertices[] = {
         // positions          
@@ -369,6 +407,8 @@ int main(){
 
 
 
+    //  temp color to test if the ui is working 
+    glm::vec3 lightColor(0.2f, 0.1f, 0.4f);
 
     while(!glfwWindowShouldClose(window)){
         float currentFrame = static_cast<float>(glfwGetTime()) ;
@@ -387,8 +427,7 @@ int main(){
             lightDirection.x, lightDirection.y, lightDirection.z
         );
         glUniform3f(
-            glGetUniformLocation(shaderProgram->ID, "lightColor"),
-            1.8f, 1.65f, 1.4f
+            glGetUniformLocation(shaderProgram->ID, "lightColor") , lightColor.r , lightColor.g , lightColor.b
         );
         glUniform3f(
             glGetUniformLocation(shaderProgram->ID, "viewPos"),
@@ -445,6 +484,29 @@ int main(){
         glDepthMask(GL_TRUE);
         glDepthFunc(GL_LESS);
 
+
+
+
+
+        ui.render(camera , model , shouldRotate , sunPosition , lightColor) ;
+
+
+        //^^^^^^^^^^^^^^^^^^^ sample imgui code ^^^^^^^^^^^^^^^^^^^^^
+        // ImGui_ImplOpenGL3_NewFrame();
+        // ImGui_ImplGlfw_NewFrame();
+        // ImGui::NewFrame();
+
+        // ImGui::Begin("ArchRenderer Inspector");
+        // ImGui::Text("FPS: %.1f", io.Framerate);
+        // ImGui::Checkbox("Auto-Rotate (F)", &shouldRotate);
+        // ImGui::SliderFloat("ZOOM" , &camera.Zoom , 10.0f , 90.0f) ;
+        // ImGui::End();
+
+        // ImGui::Render();
+        // ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+
+        // ^^^^^^^^^^^^^^^^^^^^^^^ END ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
         glfwSwapBuffers(window) ;
         glfwPollEvents() ;
     }
@@ -456,6 +518,16 @@ int main(){
     delete sunshader;
     delete ourmodel;
     delete sunmodel;
+
+
+
+
+    ui.shutdown() ;
+    //^^^^^^^^^^^^^^^^^^^ destroy imgui context ^^^^^^^^^^^^^^^
+    // ImGui_ImplOpenGL3_Shutdown();
+    // ImGui_ImplGlfw_Shutdown();
+    // ImGui::DestroyContext();
+    // ^^^^^^^^^^^^^^^^^^END ^^^^^^^^^^^^^^^^^^^^^^
 
     glfwDestroyWindow(window);
     glfwTerminate();
